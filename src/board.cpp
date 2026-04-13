@@ -27,13 +27,39 @@ int Board::CoordinateToIndex(const int& x, const int& y){
     return y * Board::boardSize + x;
 }
 
-int Board::CountLiberties(const int& x, const int& y, const Stone& colour){
-
-    for (int i = 0; i < boardSize*boardSize; i++){
-        for (int n : neighbours[i]){ // loop through neighbouring positions for each cell
-            if (board[n]==colour){
-                libertyPosition.insert(i);
+int Board::CountLiberties(const int& x, const int& y){
+    int start = CoordinateToIndex(x, y);
+    Stone colour = board[start];
+    static int liberties;
+    for (int i = start; i < boardSize*boardSize; i++){
+       if (Board::visitedPositions.insert(i).second==true){ // not visited yet
+            for (int n:neighbours[i]){ // check neighbouring stones
+                if (board[n]==std::nullopt){ // stone colour match?
+                    liberties++;
+                    visitedPositions.insert(n);
+                    CountLiberties(n, colour);
+                }
+                else{
+                    visitedPositions.insert(n);
+                }
             }
-        }
+       }
+    }
+}
+
+int Board::CountLiberties(const int& n, const Stone& colour){
+    for (int i = n; i < boardSize*boardSize; i++){
+       if (Board::visitedPositions.insert(i).second==true){ // not visited yet
+            for (int n:neighbours[i]){ // check neighbouring stones
+                if (board[n]==colour){ // stone colour match?
+                    liberties++;
+                    visitedPositions.insert(n);
+                    CountLiberties(n, colour);
+                }
+                else{
+                    visitedPositions.insert(n);
+                }
+            }
+       }
     }
 }
