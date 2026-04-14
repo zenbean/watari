@@ -27,39 +27,23 @@ int Board::CoordinateToIndex(const int& x, const int& y){
     return y * Board::boardSize + x;
 }
 
-int Board::CountLiberties(const int& x, const int& y){
-    int start = CoordinateToIndex(x, y);
-    Stone colour = board[start];
-    static int liberties;
-    for (int i = start; i < boardSize*boardSize; i++){
-       if (Board::visitedPositions.insert(i).second==true){ // not visited yet
-            for (int n:neighbours[i]){ // check neighbouring stones
-                if (board[n]==std::nullopt){ // stone colour match?
-                    liberties++;
-                    visitedPositions.insert(n);
-                    CountLiberties(n, colour);
-                }
-                else{
-                    visitedPositions.insert(n);
-                }
-            }
-       }
-    }
-}
+int Board::CountLiberties(const int& x, const int& y, int& liberties){
+    int start = CoordinateToIndex(x, y); // starting stone 1D index
+    auto colour = board[start]; // colour to search liberties for
+    visitedPositions.insert(start); // visited the starting node
 
-int Board::CountLiberties(const int& n, const Stone& colour){
-    for (int i = n; i < boardSize*boardSize; i++){
-       if (Board::visitedPositions.insert(i).second==true){ // not visited yet
-            for (int n:neighbours[i]){ // check neighbouring stones
-                if (board[n]==colour){ // stone colour match?
-                    liberties++;
-                    visitedPositions.insert(n);
-                    CountLiberties(n, colour);
-                }
-                else{
-                    visitedPositions.insert(n);
-                }
+    for (int n:neighbours[start]){ // check neighbouring stones
+        if (visitedPositions.find(n)==visitedPositions.end()){ // not in visisted
+            if (board[n]==std::nullopt){ // empty spot?
+                liberties++;
             }
-       }
+            else if (board[n]==colour){
+                visitedPositions.insert(n);
+                CountLiberties(n%boardSize,(int)(n/boardSize));
+            }
+            else{
+                visitedPositions.insert(n);
+            }
+        }
     }
 }

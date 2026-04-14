@@ -11,8 +11,7 @@ class Board{
         std::unordered_set<int> visitedPositions;
 
         std::unordered_set<long long> previousBoardHash;
-        int CountLiberties(const int& x, const int& y, const Stone& colour);
-        int CountLiberties(const int& n, const Stone& colour);
+        int CountLiberties(const int& x, const int& y);
     public:
         Board(int boardSize): boardSize(boardSize), board(boardSize*boardSize, std::nullopt), neighbours(boardSize*boardSize){}
         int CoordinateToIndex(const int& x, const int& y);
