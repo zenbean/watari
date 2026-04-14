@@ -8,11 +8,10 @@ class Board{
         int boardSize;
         std::vector<std::optional<Stone>> board;
         std::vector<std::vector<int>> neighbours;
-        std::unordered_set<int> visitedPositions;
-
         std::unordered_set<long long> previousBoardHash;
-        int CountLiberties(const int& x, const int& y);
+        void FindLiberties(const int& n, std::optional<Stone> colour, std::unordered_set<int>& liberties, std::unordered_set<int>& visitedPositions);
+        int CountLiberties(const int& n);
     public:
-        Board(int boardSize): boardSize(boardSize), board(boardSize*boardSize, std::nullopt), neighbours(boardSize*boardSize){}
+        Board(int boardSize): boardSize(boardSize), board(boardSize*boardSize, std::nullopt), neighbours(boardSize*boardSize){};
         int CoordinateToIndex(const int& x, const int& y);
 };

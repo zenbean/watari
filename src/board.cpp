@@ -27,23 +27,25 @@ int Board::CoordinateToIndex(const int& x, const int& y){
     return y * Board::boardSize + x;
 }
 
-int Board::CountLiberties(const int& x, const int& y, int& liberties){
-    int start = CoordinateToIndex(x, y); // starting stone 1D index
-    auto colour = board[start]; // colour to search liberties for
-    visitedPositions.insert(start); // visited the starting node
+void Board::FindLiberties(const int& n, std::optional<Stone> colour, std::unordered_set<int>& liberties, std::unordered_set<int>& visitedPositions){
+    if(!visitedPositions.insert(n).second) return; // visited the starting node
 
-    for (int n:neighbours[start]){ // check neighbouring stones
-        if (visitedPositions.find(n)==visitedPositions.end()){ // not in visisted
-            if (board[n]==std::nullopt){ // empty spot?
-                liberties++;
+    for (int neighbourPos:neighbours[n]){ // check neighbouring stones
+        if (visitedPositions.find(neighbourPos)==visitedPositions.end()){ // not in visisted
+            if (board[neighbourPos]==std::nullopt){ // empty spot?
+                liberties.insert(neighbourPos);
             }
-            else if (board[n]==colour){
-                visitedPositions.insert(n);
-                CountLiberties(n%boardSize,(int)(n/boardSize));
-            }
-            else{
-                visitedPositions.insert(n);
+            else if (board[neighbourPos]==colour){
+                FindLiberties(neighbourPos, colour, liberties, visitedPositions);
             }
         }
     }
+}
+
+int Board::CountLiberties(const int& n){
+    std::unordered_set<int> liberties;
+    std::unordered_set<int> visitedPositions;
+    std::optional<Stone> colour = board[n];
+    FindLiberties(n, colour, liberties, visitedPositions);
+    return liberties.size();
 }
