@@ -28,16 +28,15 @@ int Board::CoordinateToIndex(const int& x, const int& y){
 }
 
 void Board::FindLiberties(const int& n, std::optional<Stone> colour, std::unordered_set<int>& liberties, std::unordered_set<int>& visitedPositions){
-    if(!visitedPositions.insert(n).second) return; // visited the starting node
+    if(colour==std::nullopt) return;
+    if(!visitedPositions.insert(n).second) return; // check if node is visited
 
     for (int neighbourPos:neighbours[n]){ // check neighbouring stones
-        if (visitedPositions.find(neighbourPos)==visitedPositions.end()){ // not in visisted
-            if (board[neighbourPos]==std::nullopt){ // empty spot?
-                liberties.insert(neighbourPos);
-            }
-            else if (board[neighbourPos]==colour){
-                FindLiberties(neighbourPos, colour, liberties, visitedPositions);
-            }
+        if (board[neighbourPos]==std::nullopt){ // empty spot?
+            liberties.insert(neighbourPos);
+        }
+        else if (board[neighbourPos]==colour){
+            FindLiberties(neighbourPos, colour, liberties, visitedPositions);
         }
     }
 }
@@ -49,3 +48,16 @@ int Board::CountLiberties(const int& n){
     FindLiberties(n, colour, liberties, visitedPositions);
     return liberties.size();
 }
+
+bool Board::ValidMove(const int& n, std::optional<Stone> colour){ // check if valid move
+    if( n < 0 || n > 80) return false; // surely this is not possible if the grid is fixed and stones are only to be placed inside
+    // temporarily place the stone then check liberties - store the old colour while we are checking for valid move (maybe this can happen in PlayStone)
+    if(CountLiberties(n)==0) return false;
+    return true;
+};
+
+void Board::PlayStone(const int& n, std::optional<Stone> colour){ // update the board with the valid move
+    if(ValidMove(n, colour)) {
+        board[n] = colour;
+    }
+};
