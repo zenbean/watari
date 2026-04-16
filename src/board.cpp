@@ -27,7 +27,7 @@ int Board::CoordinateToIndex(const int& x, const int& y){
     return y * Board::boardSize + x;
 }
 
-void Board::FindLiberties(const int& n, std::optional<Stone> colour, std::unordered_set<int>& liberties, std::unordered_set<int>& visitedPositions){
+void Board::FindLiberties(const int& n, std::optional<Stone> colour, std::unordered_set<int>& liberties, std::unordered_set<int>& visitedPositions, std::unordered_set<int>& groupPositions){
     if(colour==std::nullopt) return;
     if(!visitedPositions.insert(n).second) return; // check if node is visited
 
@@ -36,23 +36,39 @@ void Board::FindLiberties(const int& n, std::optional<Stone> colour, std::unorde
             liberties.insert(neighbourPos);
         }
         else if (board[neighbourPos]==colour){
+            groupPositions.insert(neighbourPos);
             FindLiberties(neighbourPos, colour, liberties, visitedPositions);
         }
     }
 }
 
-int Board::CountLiberties(const int& n){
+int Board::CountLiberties(const int& n, std::unordered_set<int>& groupPositions){
     std::unordered_set<int> liberties;
     std::unordered_set<int> visitedPositions;
     std::optional<Stone> colour = board[n];
-    FindLiberties(n, colour, liberties, visitedPositions);
+    FindLiberties(n, colour, liberties, visitedPositions, groupPositions);
     return liberties.size();
 }
 
 bool Board::ValidMove(const int& n, std::optional<Stone> colour){ // check if valid move
-    if( n < 0 || n > 80) return false; // surely this is not possible if the grid is fixed and stones are only to be placed inside
-    // temporarily place the stone then check liberties - store the old colour while we are checking for valid move (maybe this can happen in PlayStone)
-    if(CountLiberties(n)==0) return false;
+    if( n < 0 || n > (boardSize * boardSize) - 1) return false; 
+    if (board[n]!=std::nullopt) return false;
+    // temporarily place the stone then check liberties - if it isn't valid, turn it into empty
+    board[n]=colour;
+    std::unordered_set<int> groupPositions;
+    if(CountLiberties(n, groupPositions)==0) {
+        // check if capturing opponent pieces
+        for (int neighbourPos:neighbours[n]){
+            if(board[neighbourPos]!=colour && board[neighbourPos]!=std::nullopt){
+                CountLiberties(n, groupPositions);
+                if(groupPositions.size()==0){
+                    for(int pos:groupPositions){
+                        board[pos]=std::nullopt;
+                    }
+                }
+            }
+        }
+    }
     return true;
 };
 
