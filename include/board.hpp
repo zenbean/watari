@@ -8,13 +8,15 @@ class Board{
         int boardSize;
         std::vector<std::optional<Stone>> board;
         std::vector<std::vector<int>> neighbours;
-        std::unordered_set<long long> previousBoardHash;
+        std::unordered_set<long long> previousBoard;
 
-        void FindLiberties(const int& n, std::optional<Stone> colour, std::unordered_set<int>& liberties, std::unordered_set<int>& visitedPositions);
+        void FindLiberties(const int& n, const std::optional<Stone>& colour, std::unordered_set<int>& liberties, std::unordered_set<int>& visitedPositions);
+        void FindGroup(const int& n, const std::optional<Stone>& colour, std::unordered_set<int>& groupPositions, std::unordered_set<int>& visitedPositions);
     public:
         Board(int boardSize): boardSize(boardSize), board(boardSize*boardSize, std::nullopt), neighbours(boardSize*boardSize){};
         int CoordinateToIndex(const int& x, const int& y);
         int CountLiberties(const int& n);
+        std::unordered_set<int> GetGroup(const int& n);
         bool ValidMove(const int& n, std::optional<Stone> colour);
         void PlayStone(const int& n, std::optional<Stone> colour);
 };
