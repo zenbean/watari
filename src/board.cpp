@@ -69,30 +69,13 @@ std::unordered_set<int> Board::GetGroup(const int& n){
     return groupPositions;
 }
 
-bool Board::ValidMove(const int& n, std::optional<Stone> colour){ // check if valid move
-    if( n < 0 || n > (boardSize * boardSize) - 1) return false; 
-    if (board[n]!=std::nullopt) return false;
-    // temporarily place the stone then check liberties - if it isn't valid, turn it into empty
-    board[n]=colour;
-    std::unordered_set<int> opponentGroup;
-    // check if capturing opponent pieces
-    for (int neighbourPos:neighbours[n]){
-        if(board[neighbourPos]!=colour && board[neighbourPos]!=std::nullopt){
-            if(CountLiberties(neighbourPos)==0){
-                std::unordered_set<int> opponentGroup = GetGroup(neighbourPos);
-                for(int pos:opponentGroup){
-                    board[pos]=std::nullopt;
-                }
-            }
-        }
-    }
-    if(CountLiberties(n))
-        return true;
-    else
-        return false;
+bool Board::ValidMove(const int& n, std::optional<Stone> colour){ // check if valid move with a copy of the board
+    std::vector<std::optional<Stone>> temp_board = board;
+    if(n>0 && n < boardSize*boardSize-1) return false;
+
 };
 
-void Board::PlayStone(const int& n, std::optional<Stone> colour){ // update the board with the valid move
+void Board::PlayStone(const int& n, std::optional<Stone> colour){ // update the board with the valid move and captures
     if(ValidMove(n, colour)) {
         board[n] = colour;
     }
