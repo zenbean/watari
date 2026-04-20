@@ -69,10 +69,8 @@ std::unordered_set<int> Board::GetGroup(const int& n, std::vector<std::optional<
     return groupPositions;
 }
 
-bool Board::ValidMove(const int& n, std::optional<Stone> colour, std::vector<std::optional<Stone>>& local_board){ // check if valid move with a copy of the board
-    if(n<0 || n > boardSize*boardSize-1) return false;
-    if(board[n]!=std::nullopt) return false;
-    local_board[n] = colour; // temporary placement
+std::vector<std::optional<Stone>> Board::SimulateMove(const int& n, std::optional<Stone> colour, std::vector<std::optional<Stone>> local_board){
+    local_board[n]=colour;
     for(int neighbourPos:neighbours[n]){
         //check capture
         if(local_board[neighbourPos]!=std::nullopt && local_board[neighbourPos]!=colour && CountLiberties(neighbourPos, local_board)==0){
@@ -81,13 +79,19 @@ bool Board::ValidMove(const int& n, std::optional<Stone> colour, std::vector<std
             }
         }
     }
+    return local_board;
+}
+
+bool Board::ValidMove(const int& n, std::vector<std::optional<Stone>>& local_board){ // check if valid move with a copy of the board
     if(CountLiberties(n, local_board)>0) return true;
     else return false;
 };
 
 void Board::PlayStone(const int& n, std::optional<Stone> colour){ // update the board with the valid move and captures
-    std::vector<std::optional<Stone>> temp_board = board;
-    if(ValidMove(n, colour, temp_board)){
+    if(n < 0 || n >= boardSize*boardSize-1) return;
+    if(board[n]!=std::nullopt) return;
+    std::vector<std::optional<Stone>> temp_board = SimulateMove(n, colour, board);
+    if (ValidMove(n, temp_board)){
         board = temp_board;
     }
 };
