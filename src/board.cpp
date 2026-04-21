@@ -71,11 +71,14 @@ std::unordered_set<int> Board::GetGroup(const int& n, std::vector<std::optional<
 
 std::vector<std::optional<Stone>> Board::SimulateMove(const int& n, std::optional<Stone> colour, std::vector<std::optional<Stone>> local_board){
     local_board[n]=colour;
+    std::unordered_set<int> visitedGroups;
     for(int neighbourPos:neighbours[n]){
         //check capture
         if(local_board[neighbourPos]!=std::nullopt && local_board[neighbourPos]!=colour && CountLiberties(neighbourPos, local_board)==0){
             for(int opponentGroup:GetGroup(neighbourPos, local_board)){
-                local_board[opponentGroup]=std::nullopt;
+                if(visitedGroups.insert(opponentGroup)){
+                    local_board[opponentGroup]=std::nullopt;
+                }
             }
         }
     }
@@ -88,7 +91,7 @@ bool Board::ValidMove(const int& n, std::vector<std::optional<Stone>>& local_boa
 };
 
 void Board::PlayStone(const int& n, std::optional<Stone> colour){ // update the board with the valid move and captures
-    if(n < 0 || n >= boardSize*boardSize-1) return;
+    if(n < 0 || n >= boardSize*boardSize) return;
     if(board[n]!=std::nullopt) return;
     std::vector<std::optional<Stone>> temp_board = SimulateMove(n, colour, board);
     if (ValidMove(n, temp_board)){
