@@ -27,51 +27,55 @@ int Board::CoordinateToIndex(const int& x, const int& y){
     return y * Board::boardSize + x;
 }
 
-void Board::ExploreBoard(const int&n, const std::optional<Stone>& colour, std::unordered_set<int>& liberties, std::unordered_set<int>& groupPositions, std::unordered_set<int>& visitedPositions, std::vector<std::optional<Stone>>& local_board){
+void Board::ExploreBoard(const int&n, const std::optional<Stone>& colour, BoardInfo& boardInfo, std::unordered_set<int>& visitedPositions, std::vector<std::optional<Stone>>& local_board){
     if(colour==std::nullopt) return;
     if(!visitedPositions.insert(n).second) return; // check if node is visited
-    groupPositions.insert(n);
+    boardInfo.groupPositions.insert(n);
     for (int neighbourPos:neighbours[n]){ // check neighbouring stones
         if (local_board[neighbourPos]==std::nullopt){ // empty spot?
-            liberties.insert(neighbourPos);
-            groupPositions.insert(neighbourPos);
-            ExploreBoard(neighbourPos, colour, groupPositions, visitedPositions, local_board);
+            boardInfo.liberties.insert(neighbourPos);
         }
         else if (local_board[neighbourPos]==colour){
-            ExploreBoard(neighbourPos, colour, liberties, visitedPositions, local_board);
+            ExploreBoard(neighbourPos, colour, boardInfo, visitedPositions, local_board);
         }
     }
 }
 
-int Board::GetInfo(const int& n, std::vector<std::optional<Stone>>& local_board){
-    std::unordered_set<int> liberties;
-    std::unordered_set<int> groupPositions;
+BoardInfo Board::GetInfo(const int& n, std::vector<std::optional<Stone>>& local_board){
+    BoardInfo boardInfo;
     std::unordered_set<int> visitedPositions;
     std::optional<Stone> colour = local_board[n];
-    ExploreBoard(n, colour, liberties, groupPositions, visitedPositions, local_board);
-    return liberties.size();
+    ExploreBoard(n, colour, boardInfo, visitedPositions, local_board);
+    return boardInfo;
 }
 
+// simulate move regardless of legality
 std::vector<std::optional<Stone>> Board::SimulateMove(const int& n, std::optional<Stone> colour, std::vector<std::optional<Stone>> local_board){
     local_board[n]=colour;
-    std::unordered_set<int> visitedGroups;
+    std::unordered_set<int> visitedPos;
     for(int neighbourPos:neighbours[n]){
-        //check capture
-        if(local_board[neighbourPos]!=std::nullopt && local_board[neighbourPos]!=colour && CountLiberties(neighbourPos, local_board)==0){
-            for(int opponentGroup:GetInfo(neighbourPos, local_board)){
-                if(visitedGroups.insert(opponentGroup).second){
-                    local_board[opponentGroup]=std::nullopt;
-                }
+        // only check neighbouring stones with opposite colour for capture opportunity
+        if (local_board[neighbourPos]==std::nullopt || local_board[neighbourPos]==colour || visitedPos.find(neighbourPos)!=visitedPos.end()){
+            continue;
+        }
+        BoardInfo neighbourInfo = GetInfo(neighbourPos, local_board);
+        for (int pos:neighbourInfo.groupPositions){
+            visitedPos.insert(pos);
+        }
+        if (neighbourInfo.liberties.empty()){
+            for (int pos:neighbourInfo.groupPositions){
+                local_board[pos] = std::nullopt; // capture the whole group
             }
         }
     }
     return local_board;
 }
 
+// validate simulated move
 bool Board::ValidMove(const int& n, std::vector<std::optional<Stone>>& local_board){ // check if valid move with a copy of the board
-    if(CountLiberties(n, local_board)>0) return true;
+    if(GetInfo(n, local_board).liberties.size()>0) return true;
     else return false;
-};
+}
 
 void Board::PlayStone(const int& n, std::optional<Stone> colour){ // update the board with the valid move and captures
     if(n < 0 || n >= boardSize*boardSize) return;
