@@ -27,7 +27,7 @@ int Board::CoordinateToIndex(const int& x, const int& y){
     return y * Board::boardSize + x;
 }
 
-void Board::ExploreBoard(const int&n, const std::optional<Stone>& colour, BoardInfo& boardInfo, std::vector<char>& visitedPositions){
+void Board::ExploreBoard(const int& n, const std::optional<Stone>& colour, BoardInfo& boardInfo, std::vector<char>& visitedPositions){
     if(colour==std::nullopt) return;
     if(visitedPositions[n]==1) return; // skip visited node
     visitedPositions[n]=1;
@@ -52,9 +52,10 @@ BoardInfo Board::GetInfo(const int& n){
 
 // simulate move regardless of legality
 std::vector<std::pair<int, std::optional<Stone>>> Board::SimulateMove(const int& n, std::optional<Stone> colour){
-    board[n]=colour;
     std::vector<char> visitedPos(boardSize*boardSize, 0);
-    std::vector<std::pair<int, std::optional<Stone>>> changedPos;
+    std::vector<std::pair<int, std::optional<Stone>>> changes;
+    changes.push_back({n, board[n]});
+    board[n]=colour;
     for(int neighbourPos:neighbours[n]){
         // only check neighbouring stones with opposite colour for capture opportunity
         if (board[neighbourPos]==std::nullopt || board[neighbourPos]==colour || visitedPos[neighbourPos]==1){
@@ -66,12 +67,12 @@ std::vector<std::pair<int, std::optional<Stone>>> Board::SimulateMove(const int&
         }
         if (neighbourInfo.liberties.empty()){
             for (int pos:neighbourInfo.groupPositions){
+                changes.push_back({pos, board[pos]});
                 board[pos] = std::nullopt; // capture the whole group
-                changedPos.push_back();
             }
         }
     }
-    return changedPos;
+    return changes;
 }
 
 // validate simulated move
@@ -83,12 +84,11 @@ bool Board::ValidMove(const int& n){ // check if valid move with a copy of the b
 void Board::PlayStone(const int& n, std::optional<Stone> colour){ // update the board with the valid move and captures
     if(n < 0 || n >= boardSize*boardSize) return;
     if(board[n]!=std::nullopt) return;
-    std::vector<int> changedPos = SimulateMove(n, colour);
+    std::vector<std::pair<int, std::optional<Stone>>> changes = SimulateMove(n, colour);
     if (!ValidMove(n)){
         // undo changes
-        for(int pos:changedPos){
-            board[pos]=std::nullopt;
+        for(std::pair<int, std::optional<Stone>> change:changes){
+            board[change.first]=change.second;
         }
-        board[n]=std::nullopt;
     }
 };
