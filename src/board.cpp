@@ -42,6 +42,7 @@ void Board::ExploreBoard(const int& n, const std::optional<Stone>& colour, Board
     }
 }
 
+// gives visited group positions and libterties of the stone
 BoardInfo Board::GetInfo(const int& n){
     BoardInfo boardInfo;
     std::vector<char> visitedPositions(boardSize*boardSize, 0);
@@ -51,44 +52,51 @@ BoardInfo Board::GetInfo(const int& n){
 }
 
 // simulate move regardless of legality
-std::vector<std::pair<int, std::optional<Stone>>> Board::SimulateMove(const int& n, std::optional<Stone> colour){
-    std::vector<char> visitedPos(boardSize*boardSize, 0);
-    std::vector<std::pair<int, std::optional<Stone>>> changes;
+bool Board::SimulateMove(const int& n, std::optional<Stone> colour)
+{
+    changes.clear();
+    std::vector<char> visitedPos(boardSize * boardSize, 0);
     changes.push_back({n, board[n]});
-    board[n]=colour;
-    for(int neighbourPos:neighbours[n]){
-        // only check neighbouring stones with opposite colour for capture opportunity
-        if (board[neighbourPos]==std::nullopt || board[neighbourPos]==colour || visitedPos[neighbourPos]==1){
-            continue;
-        }
-        BoardInfo neighbourInfo = GetInfo(neighbourPos);
-        for (int pos:neighbourInfo.groupPositions){
-            visitedPos[pos]=1;
-        }
-        if (neighbourInfo.liberties.empty()){
-            for (int pos:neighbourInfo.groupPositions){
-                changes.push_back({pos, board[pos]});
-                board[pos] = std::nullopt; // capture the whole group
+    board[n] = colour;
+    bool capturedSomething = false;
+    for (int neighbourPos : neighbours[n]) {
+        if (board[neighbourPos] == std::nullopt) continue;
+        else if (board[neighbourPos] == colour) continue;
+        else if (visitedPos[neighbourPos]) continue;
+        else{
+            BoardInfo neighbourInfo = GetInfo(neighbourPos);
+            for (int pos : neighbourInfo.groupPositions)
+                visitedPos[pos] = 1;
+            if (neighbourInfo.liberties.empty())
+            {
+                capturedSomething = true;
+                for (int pos : neighbourInfo.groupPositions)
+                {
+                    changes.push_back({pos, board[pos]});
+                    board[pos] = std::nullopt;
+                }
             }
         }
     }
-    return changes;
+    BoardInfo myInfo = GetInfo(n);
+    if (!myInfo.liberties.empty()) return true;
+    else if (capturedSomething) return true;
+    return false;
 }
 
-// validate simulated move
-bool Board::ValidMove(const int& n){ // check if valid move with a copy of the board
-    if(GetInfo(n).liberties.size()>0) return true;
-    else return false;
-}
-
-void Board::PlayStone(const int& n, std::optional<Stone> colour){ // update the board with the valid move and captures
-    if(n < 0 || n >= boardSize*boardSize) return;
-    if(board[n]!=std::nullopt) return;
-    std::vector<std::pair<int, std::optional<Stone>>> changes = SimulateMove(n, colour);
-    if (!ValidMove(n)){
-        // undo changes
-        for(std::pair<int, std::optional<Stone>> change:changes){
-            board[change.first]=change.second;
+void Board::PlayStone(const int& n, std::optional<Stone> colour)
+{
+    if (n < 0 || n >= boardSize * boardSize)
+        return;
+    if (board[n] != std::nullopt)
+        return;
+    if (!SimulateMove(n, colour))
+    {
+        for (auto& change : changes)
+        {
+            board[change.first] = change.second;
         }
+        return;
     }
-};
+    changes.clear();
+}

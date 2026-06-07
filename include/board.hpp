@@ -14,10 +14,11 @@ class Board{
         std::vector<std::optional<Stone>> board;
         std::vector<std::vector<int>> neighbours;
         std::unordered_set<long long> previousBoard;
+        std::vector<std::pair<int, std::optional<Stone>>> changes;
 
         void ExploreBoard(const int&n, const std::optional<Stone>& colour, BoardInfo& boardInfo, std::vector<char>& visitedPositions);
         bool ValidMove(const int& n);
-        std::vector<std::pair<int, std::optional<Stone>>> SimulateMove(const int& n, std::optional<Stone> colour);
+        bool SimulateMove(const int& n, std::optional<Stone> colour);
     public:
         Board(int boardSize): boardSize(boardSize), board(boardSize*boardSize, std::nullopt), neighbours(boardSize*boardSize){};
         int CoordinateToIndex(const int& x, const int& y);
