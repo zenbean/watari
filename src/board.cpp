@@ -27,76 +27,83 @@ int Board::CoordinateToIndex(const int& x, const int& y){
     return y * Board::boardSize + x;
 }
 
-void Board::ExploreBoard(const int& n, const std::optional<Stone>& colour, BoardInfo& boardInfo, std::vector<char>& visitedPositions){
-    if(colour==std::nullopt) return;
-    if(visitedPositions[n]==1) return; // skip visited node
-    visitedPositions[n]=1;
-    boardInfo.groupPositions.insert(n);
-    for (int neighbourPos:neighbours[n]){ // check neighbouring stones
-        if (board[neighbourPos]==std::nullopt){ // empty spot?
-            boardInfo.liberties.insert(neighbourPos);
-        }
-        else if (board[neighbourPos]==colour){
-            ExploreBoard(neighbourPos, colour, boardInfo, visitedPositions);
-        }
-    }
+// finding the parent of an object
+int Board::Find(const int& x){
+  if (parent[x]!=x){
+    parent[x] = Find(parent[x]); // path compression
+    return parent[x];
+  }
+  else return x;
 }
 
-// gives visited group positions and libterties of the stone
-BoardInfo Board::GetInfo(const int& n){
-    BoardInfo boardInfo;
-    std::vector<char> visitedPositions(boardSize*boardSize, 0);
-    std::optional<Stone> colour = board[n];
-    ExploreBoard(n, colour, boardInfo, visitedPositions);
-    return boardInfo;
+// union depending on number of stones in a group
+void Board::Union(const int& x, const int& y){
+  int parentX = Find(x);
+  int parentY = Find(y);
+
+  if(parentX == parentY) return;
+
+  if(stonesInGroup[parentX].size() < stonesInGroup[parentY].size()){
+    std::swap(parentX, parentY);
+  }
+
+  // parentY < parentX
+  parent[parentY] = parentX;
+
+  for(int liberty:groupLiberties[parentY]){
+    groupLiberties[parentX].insert(liberty);
+  }
+  groupLiberties[parentY].clear();
+  
+  for(int stone:stonesInGroup[parentY]){
+    stonesInGroup[parentX].push_back(stone);
+  }
+  stonesInGroup[parentY].clear();
 }
 
-// simulate move regardless of legality
-bool Board::SimulateMove(const int& n, std::optional<Stone> colour)
-{
-    changes.clear();
-    std::vector<char> visitedPos(boardSize * boardSize, 0);
-    changes.push_back({n, board[n]});
-    board[n] = colour;
-    bool capturedSomething = false;
-    for (int neighbourPos : neighbours[n]) {
-        if (board[neighbourPos] == std::nullopt) continue;
-        else if (board[neighbourPos] == colour) continue;
-        else if (visitedPos[neighbourPos]) continue;
-        else{
-            BoardInfo neighbourInfo = GetInfo(neighbourPos);
-            for (int pos : neighbourInfo.groupPositions)
-                visitedPos[pos] = 1;
-            if (neighbourInfo.liberties.empty())
-            {
-                capturedSomething = true;
-                for (int pos : neighbourInfo.groupPositions)
-                {
-                    changes.push_back({pos, board[pos]});
-                    board[pos] = std::nullopt;
-                }
-            }
-        }
+bool Board::ValidMove(const int& n, std::optional<Stone> colour){
+  if(n<0 || n>=boardSize*boardSize || board[n]!=std::nullopt) return false;
+
+  for(int neighbour:neighbours[n]){
+    if(board[neighbour]==std::nullopt){
+      return true;
     }
-    BoardInfo myInfo = GetInfo(n);
-    if (!myInfo.liberties.empty()) return true;
-    else if (capturedSomething) return true;
-    return false;
+    else if(board[neighbour]==colour){
+      int friendlyParent = Find(neighbour);
+      if (groupLiberties[friendlyParent].size()>=2){
+        return true;
+      }
+    }
+    else {
+      int opponentParent = Find(neighbour);
+      if (groupLiberties[opponentParent].size()==1){
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
-void Board::PlayStone(const int& n, std::optional<Stone> colour)
-{
-    if (n < 0 || n >= boardSize * boardSize)
-        return;
-    if (board[n] != std::nullopt)
-        return;
-    if (!SimulateMove(n, colour))
-    {
-        for (auto& change : changes)
-        {
-            board[change.first] = change.second;
-        }
-        return;
+void Board::PlayStone(const int& n, std::optional<Stone> colour){
+  board[n] = colour;
+  // intialise DSU
+  parent[n] = n;
+  stonesInGroup[n].clear();
+  groupLiberties[n].clear();
+  stonesInGroup[n].push_back(n);
+
+  if (ValidMove(n, colour)){
+    for (int neighbour:neighbours[n]){
+      if(board[neighbour]==std::nullopt){
+        groupLiberties[n].insert(neighbour);
+      }
+      else if(board[neighbour]==board[n]){ // same colour neighbour
+        Union(n, neighbour);
+      }
+      else{ // opposite colour neighbour
+        int opponentParent=Find(neighbour);
+        groupLiberties[opponentParent].erase(n);
+      }
     }
-    changes.clear();
+  }
 }

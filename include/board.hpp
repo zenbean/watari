@@ -1,3 +1,4 @@
+#pragma once
 #include "common.hpp"
 #include <vector>
 #include <unordered_set>
@@ -10,18 +11,19 @@ typedef struct BoardInfo{
 
 class Board{
     private:
-        int boardSize;
         std::vector<std::optional<Stone>> board;
         std::vector<std::vector<int>> neighbours;
-        std::unordered_set<long long> previousBoard;
-        std::vector<std::pair<int, std::optional<Stone>>> changes;
+        int boardSize;
 
-        void ExploreBoard(const int&n, const std::optional<Stone>& colour, BoardInfo& boardInfo, std::vector<char>& visitedPositions);
-        bool ValidMove(const int& n);
-        bool SimulateMove(const int& n, std::optional<Stone> colour);
+        std::vector<int> parent; // store parent value of each position index
+        std::vector<std::unordered_set<int>> groupLiberties; // track liberties for each group
+        std::vector<std::vector<int>> stonesInGroup; // track stones in each group
+
+        int Find(const int& x);
+        void Union(const int&x, const int& y);
     public:
-        Board(int boardSize): boardSize(boardSize), board(boardSize*boardSize, std::nullopt), neighbours(boardSize*boardSize){};
+        Board(int boardSize);
         int CoordinateToIndex(const int& x, const int& y);
-        BoardInfo GetInfo(const int& n);
+        bool ValidMove(const int& n, std::optional<Stone> colour);
         void PlayStone(const int& n, std::optional<Stone> colour);
 };
