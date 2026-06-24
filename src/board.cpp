@@ -1,7 +1,14 @@
 #include "board.hpp"
 #include "common.hpp"
 
-Board::Board(int boardSize):boardSize(boardSize), board(boardSize*boardSize, std::nullopt), neighbours(boardSize*boardSize){
+Board::Board(int boardSize):
+  boardSize(boardSize), 
+  board(boardSize*boardSize, std::nullopt), 
+  neighbours(boardSize*boardSize),
+  parent(boardSize*boardSize),
+  groupLiberties(boardSize*boardSize),
+  stonesInGroup(boardSize*boardSize)
+{
     // compute neighbours for each position
     for (int i = 0; i < boardSize*boardSize; i++){
         //up
@@ -85,25 +92,25 @@ bool Board::ValidMove(const int& n, std::optional<Stone> colour){
 }
 
 void Board::PlayStone(const int& n, std::optional<Stone> colour){
+  if (!ValidMove(n, colour)) return;
   board[n] = colour;
-  // intialise DSU
   parent[n] = n;
   stonesInGroup[n].clear();
   groupLiberties[n].clear();
   stonesInGroup[n].push_back(n);
 
-  if (ValidMove(n, colour)){
-    for (int neighbour:neighbours[n]){
-      if(board[neighbour]==std::nullopt){
-        groupLiberties[n].insert(neighbour);
-      }
-      else if(board[neighbour]==board[n]){ // same colour neighbour
-        Union(n, neighbour);
-      }
-      else{ // opposite colour neighbour
-        int opponentParent=Find(neighbour);
-        groupLiberties[opponentParent].erase(n);
-      }
+  for (int neighbour:neighbours[n]){
+    if(board[neighbour]==std::nullopt){
+      groupLiberties[n].insert(neighbour);
+    }
+    else if(board[neighbour]==board[n]){ // same colour neighbour
+      int friendlyParent = Find(neighbour);
+      groupLiberties[friendlyParent].erase(n);
+      Union(n, neighbour);
+    }
+    else{ // opposite colour neighbour
+      int opponentParent=Find(neighbour);
+      groupLiberties[opponentParent].erase(n);
     }
   }
 }

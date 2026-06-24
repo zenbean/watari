@@ -26,4 +26,10 @@ class Board{
         int CoordinateToIndex(const int& x, const int& y);
         bool ValidMove(const int& n, std::optional<Stone> colour);
         void PlayStone(const int& n, std::optional<Stone> colour);
+
+        // for tests
+        int GetParent(int x) { return Find(x); }
+        int GetGroupSize(int x) { return stonesInGroup[Find(x)].size(); }
+        int GetLibertiesCount(int x) { return groupLiberties[Find(x)].size(); }
+        std::optional<Stone> GetStone(int x) { return board[x]; }
 };
