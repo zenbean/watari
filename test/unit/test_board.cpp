@@ -33,3 +33,19 @@ TEST(BoardUnit, DS_UnionAndFind){
   EXPECT_EQ(board.GetGroupSize(move2), 2);
   EXPECT_EQ(board.GetLibertiesCount(move1), 6);
 }
+
+TEST(BoardUnit, SuicideMove){
+  Board board(9);
+  int eye = board.CoordinateToIndex(0,0);
+  int eye_left = board.CoordinateToIndex(1,0);
+  int eye_above = board.CoordinateToIndex(0,1);
+
+  board.PlayStone(eye_left, Stone::BLACK);
+  board.PlayStone(eye_above, Stone::BLACK);
+
+  // illegal move
+  EXPECT_FALSE(board.ValidMove(eye, Stone::WHITE));
+
+  board.PlayStone(eye, Stone::WHITE);
+  EXPECT_EQ(board.GetStone(eye), std::nullopt);
+}
