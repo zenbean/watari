@@ -26,6 +26,7 @@ class Board{
         int CoordinateToIndex(const int& x, const int& y);
         bool ValidMove(const int& n, std::optional<Stone> colour);
         void PlayStone(const int& n, std::optional<Stone> colour);
+        void CaptureLogic(const int&);
 
         // for tests
         int GetParent(int x) { return Find(x); }
