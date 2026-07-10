@@ -33,8 +33,7 @@ TEST(CaptureMechanic, LargeGroupCapture) {
 
     EXPECT_EQ(board.GetStone(blackPos0), std::nullopt);
     EXPECT_EQ(board.GetStone(blackPos1), std::nullopt);
-    EXPECT_GT(board.GetLibertiesCount(whitePos0), 3); 
-    EXPECT_GT(board.GetLibertiesCount(whitePos1), 5); 
-    EXPECT_GT(board.GetLibertiesCount(whitePos2), 5); 
-
+    EXPECT_EQ(board.GetLibertiesCount(whitePos0), 3); 
+    EXPECT_EQ(board.GetLibertiesCount(whitePos1), 5); 
+    EXPECT_EQ(board.GetLibertiesCount(whitePos2), 5); 
 }

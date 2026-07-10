@@ -91,15 +91,26 @@ bool Board::ValidMove(const int& n, std::optional<Stone> colour){
   return false;
 }
 
-void Board::CaptureLogic(const int& n){
+ void Board::CaptureLogic(const int& n){
+  std::optional<Stone> opponentColour = board[n];
+  // restore liberties
+for(int stone:stonesInGroup[n]){
+  for (int neighbour:neighbours[stone]){
+    // if friendly colour
+    if (board[neighbour]!=opponentColour && board[neighbour]!=std::nullopt){
+      int friendlyParent = Find(neighbour);
+      groupLiberties[friendlyParent].insert(stone);
+    }
+  }
+}
   // clear captured
   for (int stone:stonesInGroup[n]){
     board[stone]=std::nullopt;
   }
-  // restore liberties
-
   // clear DSU
-}
+  stonesInGroup[n].clear();
+  groupLiberties[n].clear();
+} 
 
 void Board::PlayStone(const int& n, std::optional<Stone> colour){
   if (!ValidMove(n, colour)) return;
