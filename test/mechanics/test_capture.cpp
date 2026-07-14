@@ -37,3 +37,25 @@ TEST(CaptureMechanic, LargeGroupCapture) {
     EXPECT_EQ(board.GetLibertiesCount(whitePos1), 5); 
     EXPECT_EQ(board.GetLibertiesCount(whitePos2), 5); 
 }
+
+TEST(CaptureMechanic, DoubleCapture) {
+    Board board(9);
+    
+    int b0 = board.CoordinateToIndex(1, 0);
+    int b1= board.CoordinateToIndex(3, 0);
+    int w0= board.CoordinateToIndex(2, 0);
+
+    board.PlayStone(b0, Stone::BLACK);
+    board.PlayStone(b1, Stone::BLACK);
+
+    board.PlayStone(board.CoordinateToIndex(0, 0), Stone::WHITE);
+    board.PlayStone(board.CoordinateToIndex(1, 1), Stone::WHITE);
+    board.PlayStone(board.CoordinateToIndex(4, 0), Stone::WHITE);
+    board.PlayStone(board.CoordinateToIndex(3, 1), Stone::WHITE);
+
+    board.PlayStone(w0, Stone::WHITE);
+
+    EXPECT_EQ(board.GetStone(b0), std::nullopt);
+    EXPECT_EQ(board.GetStone(b1), std::nullopt);
+    EXPECT_EQ(board.GetLibertiesCount(w0), 3);
+}
