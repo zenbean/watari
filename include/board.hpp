@@ -4,11 +4,6 @@
 #include <unordered_set>
 #include <optional>
 
-typedef struct BoardInfo{
-    std::unordered_set<int> liberties;
-    std::unordered_set<int> groupPositions;
-} BoardInfo;
-
 class Board{
     private:
         std::vector<std::optional<Stone>> board;
@@ -18,6 +13,8 @@ class Board{
         std::vector<int> parent; // store parent value of each position index
         std::vector<std::unordered_set<int>> groupLiberties; // track liberties for each group
         std::vector<std::vector<int>> stonesInGroup; // track stones in each group
+
+        uint64_t currentHash = 0; // track board state
 
         int Find(const int& x);
         void Union(const int&x, const int& y);
@@ -33,4 +30,5 @@ class Board{
         int GetGroupSize(int x) { return stonesInGroup[Find(x)].size(); }
         int GetLibertiesCount(int x) { return groupLiberties[Find(x)].size(); }
         std::optional<Stone> GetStone(int x) { return board[x]; }
+        uint64_t GetCurrentHash(){return currentHash;}
 };

@@ -1,5 +1,7 @@
-#include "board.hpp"
+#include <iostream>
 #include "common.hpp"
+#include "board.hpp"
+#include "zobrist.hpp"
 
 Board::Board(int boardSize):
   boardSize(boardSize), 
@@ -9,25 +11,26 @@ Board::Board(int boardSize):
   groupLiberties(boardSize*boardSize),
   stonesInGroup(boardSize*boardSize)
 {
-    // compute neighbours for each position
-    for (int i = 0; i < boardSize*boardSize; i++){
-        //up
-        if (i < boardSize*(boardSize-1)){
-            neighbours[i].push_back(i + boardSize);
-        }
-        //down
-        if (i >= boardSize){
-            neighbours[i].push_back(i-boardSize);
-        }
-        //left
-        if (i % boardSize != 0){
-            neighbours[i].push_back(i-1);
-        }
-        //right
-        if (i % boardSize != boardSize-1){
-            neighbours[i].push_back(i+1);
-        }
+  Zobrist::Init();
+  // compute neighbours for each position
+  for (int i = 0; i < boardSize*boardSize; i++){
+    //up
+    if (i < boardSize*(boardSize-1)){
+        neighbours[i].push_back(i + boardSize);
     }
+    //down
+    if (i >= boardSize){
+        neighbours[i].push_back(i-boardSize);
+    }
+    //left
+    if (i % boardSize != 0){
+        neighbours[i].push_back(i-1);
+    }
+    //right
+    if (i % boardSize != boardSize-1){
+        neighbours[i].push_back(i+1);
+    }
+  }
 }
 
 int Board::CoordinateToIndex(const int& x, const int& y){
@@ -91,20 +94,21 @@ bool Board::ValidMove(const int& n, std::optional<Stone> colour){
   return false;
 }
 
- void Board::CaptureLogic(const int& n){
+void Board::CaptureLogic(const int& n){
   std::optional<Stone> opponentColour = board[n];
-  // restore liberties
-for(int stone:stonesInGroup[n]){
-  for (int neighbour:neighbours[stone]){
-    // if friendly colour
-    if (board[neighbour]!=opponentColour && board[neighbour]!=std::nullopt){
-      int friendlyParent = Find(neighbour);
-      groupLiberties[friendlyParent].insert(stone);
+  int int_colour = static_cast<int>(opponentColour.value());
+  // restore liberties if friendly colour
+  for(int stone:stonesInGroup[n]){
+    for (int neighbour:neighbours[stone]){
+      if (board[neighbour]!=opponentColour && board[neighbour]!=std::nullopt){
+        int friendlyParent = Find(neighbour);
+        groupLiberties[friendlyParent].insert(stone);
+      }
     }
   }
-}
   // clear captured
   for (int stone:stonesInGroup[n]){
+    currentHash ^= Zobrist::zobristTable[stone][int_colour];
     board[stone]=std::nullopt;
   }
   // clear DSU
@@ -119,6 +123,8 @@ void Board::PlayStone(const int& n, std::optional<Stone> colour){
   stonesInGroup[n].clear();
   groupLiberties[n].clear();
   stonesInGroup[n].push_back(n);
+  int int_colour = static_cast<int>(colour.value());
+  currentHash ^= Zobrist::zobristTable[n][int_colour];
 
   for (int neighbour:neighbours[n]){
     if(board[neighbour]==std::nullopt){
