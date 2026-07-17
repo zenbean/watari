@@ -106,7 +106,7 @@ void Board::CaptureLogic(const int& n){
       }
     }
   }
-  // clear captured
+  // clear captured stone from the board
   for (int stone:stonesInGroup[n]){
     currentHash ^= Zobrist::zobristTable[stone][int_colour];
     board[stone]=std::nullopt;
@@ -143,4 +143,8 @@ void Board::PlayStone(const int& n, std::optional<Stone> colour){
       }
     }
   }
+}
+
+void Board::Pass(const std::optional<Stone>& colour){
+  currentHash^=Zobrist::Bturn;
 }

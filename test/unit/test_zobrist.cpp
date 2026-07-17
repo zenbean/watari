@@ -41,6 +41,19 @@ TEST(ZobristUnit, SameHash){
     EXPECT_EQ(board.GetCurrentHash(), state0);
 }
 
-TEST(ZobristUnit, trackPlaceAndCaptureStones){
-
+TEST(BoardUnit, PassMoveMechanics) {
+    Board board(13);
+    uint64_t initial = board.GetCurrentHash();
+    
+    board.Pass(Stone::BLACK); 
+    uint64_t pass0 = board.GetCurrentHash();
+    EXPECT_NE(initial, pass0);
+    
+    board.Pass(Stone::WHITE);
+    uint64_t pass1 = board.GetCurrentHash();
+    EXPECT_EQ(initial, pass1);
+    
+    for(int i = 0; i < 81; i++) {
+        EXPECT_EQ(board.GetStone(i), std::nullopt);
+    }
 }

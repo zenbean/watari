@@ -24,6 +24,7 @@ class Board{
         bool ValidMove(const int& n, std::optional<Stone> colour);
         void PlayStone(const int& n, std::optional<Stone> colour);
         void CaptureLogic(const int&);
+        void Pass(const std::optional<Stone>& colour);
 
         // for tests
         int GetParent(int x) { return Find(x); }
