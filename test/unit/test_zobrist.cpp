@@ -23,12 +23,12 @@ TEST(ZobristUnit, SameHash){
     int whitePos2 = board.CoordinateToIndex(2, 2);
     int whitePos3 = board.CoordinateToIndex(1, 1);
     board.PlayStone(blackPos0, Stone::BLACK);
-    board.PlayStone(blackPos1, Stone::BLACK);
-    board.PlayStone(blackPos2, Stone::BLACK);
-    board.PlayStone(blackPos3, Stone::BLACK);
     board.PlayStone(whitePos0, Stone::WHITE);
+    board.PlayStone(blackPos1, Stone::BLACK);
     board.PlayStone(whitePos1, Stone::WHITE);
+    board.PlayStone(blackPos2, Stone::BLACK);
     board.PlayStone(whitePos2, Stone::WHITE);
+    board.PlayStone(blackPos3, Stone::BLACK);
     // 1
     uint64_t state0 = board.GetCurrentHash();
     EXPECT_NE(board.GetCurrentHash(), 0);

@@ -124,7 +124,7 @@ void Board::PlayStone(const int& n, std::optional<Stone> colour){
   groupLiberties[n].clear();
   stonesInGroup[n].push_back(n);
   int int_colour = static_cast<int>(colour.value());
-  currentHash ^= Zobrist::zobristTable[n][int_colour];
+  currentHash ^= Zobrist::zobristTable[n][int_colour] ^ Zobrist::Bturn;
 
   for (int neighbour:neighbours[n]){
     if(board[neighbour]==std::nullopt){
