@@ -73,7 +73,11 @@ void Board::Union(const int& x, const int& y){
 
 bool Board::ValidMove(const int& n, std::optional<Stone> colour){
   if(n<0 || n>=boardSize*boardSize || board[n]!=std::nullopt) return false;
-
+  uint64_t predictedHash = PredictHash(n, colour);
+  if(hashRecord.count(predictedHash)>0){
+    return false;
+  }
+  hashRecord.insert(currentHash);
   for(int neighbour:neighbours[n]){
     if(board[neighbour]==std::nullopt){
       return true;
@@ -145,6 +149,28 @@ void Board::PlayStone(const int& n, std::optional<Stone> colour){
   }
 }
 
-void Board::Pass(const std::optional<Stone>& colour){
+void Board::Pass(const std::optional<Stone>& Stone){
   currentHash^=Zobrist::Bturn;
+}
+
+uint64_t Board::PredictHash(const int& n, std::optional<Stone> colour){
+  uint64_t nextHash = currentHash;
+  int int_colour = static_cast<int>(colour.value());
+  nextHash ^= Zobrist::zobristTable[n][int_colour] ^ Zobrist::Bturn;
+  std::unordered_set<int> processedGroup;
+  for(int neighbour:neighbours[n]){
+    if(board[neighbour]!=std::nullopt && board[neighbour]!=colour){
+      int opponentParent = Find(neighbour);
+      if(groupLiberties[opponentParent].size()==1){
+        if(processedGroup.count(opponentParent)==0){
+          int int_oppColour = static_cast<int>(board[neighbour].value());
+          for(int stone:stonesInGroup[opponentParent]){
+            nextHash ^= Zobrist::zobristTable[stone][int_oppColour];
+          }
+          processedGroup.insert(opponentParent);
+        }
+      }
+    }
+  }
+  return nextHash;
 }

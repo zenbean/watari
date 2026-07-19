@@ -15,6 +15,7 @@ class Board{
         std::vector<std::vector<int>> stonesInGroup; // track stones in each group
 
         uint64_t currentHash = 0; // track board state
+        std::unordered_set<uint64_t> hashRecord;
 
         int Find(const int& x);
         void Union(const int&x, const int& y);
@@ -25,6 +26,7 @@ class Board{
         void PlayStone(const int& n, std::optional<Stone> colour);
         void CaptureLogic(const int&);
         void Pass(const std::optional<Stone>& colour);
+        uint64_t PredictHash(const int& n, std::optional<Stone> colour);
 
         // for tests
         int GetParent(int x) { return Find(x); }
