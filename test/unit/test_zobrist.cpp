@@ -38,7 +38,8 @@ TEST(ZobristUnit, SameHash){
     EXPECT_NE(board.GetCurrentHash(), state0);
     // 3
     board.PlayStone(blackPos2, Stone::BLACK);
-    EXPECT_EQ(board.GetCurrentHash(), state0);
+    EXPECT_NE(board.GetCurrentHash(), state0);
+    EXPECT_FALSE(board.ValidMove(blackPos2, Stone::BLACK));
 }
 
 TEST(BoardUnit, PassMoveMechanics) {

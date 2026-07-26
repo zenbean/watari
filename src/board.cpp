@@ -77,7 +77,6 @@ bool Board::ValidMove(const int& n, std::optional<Stone> colour){
   if(hashRecord.count(predictedHash)>0){
     return false;
   }
-  hashRecord.insert(currentHash);
   for(int neighbour:neighbours[n]){
     if(board[neighbour]==std::nullopt){
       return true;
@@ -122,6 +121,7 @@ void Board::CaptureLogic(const int& n){
 
 void Board::PlayStone(const int& n, std::optional<Stone> colour){
   if (!ValidMove(n, colour)) return;
+  hashRecord.insert(currentHash);
   board[n] = colour;
   parent[n] = n;
   stonesInGroup[n].clear();
@@ -129,7 +129,6 @@ void Board::PlayStone(const int& n, std::optional<Stone> colour){
   stonesInGroup[n].push_back(n);
   int int_colour = static_cast<int>(colour.value());
   currentHash ^= Zobrist::zobristTable[n][int_colour] ^ Zobrist::Bturn;
-
   for (int neighbour:neighbours[n]){
     if(board[neighbour]==std::nullopt){
       groupLiberties[n].insert(neighbour);
