@@ -3,6 +3,7 @@
 #include <vector>
 #include <unordered_set>
 #include <optional>
+#include <cstdint>
 
 class Board{
     private:
