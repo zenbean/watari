@@ -1,7 +1,8 @@
 #include "gtp.hpp"
-#include "board.hpp"
 #include <iostream>
 #include <sstream>
+#include <string>
+#include <random>
 
 GTP::GTP():board(9), currentSize(9){}
 
@@ -17,7 +18,7 @@ void GTP::ProcessLine(const std::string& line){
     std::istringstream ss(line);
     std::string command;
     ss>>command;
-    if (line == "protocol_version") SendResponse("2");
+    if (command == "protocol_version") SendResponse("2");
     else if (command == "name") SendResponse("Watari");
     else if (command == "version") SendResponse("0.1");
     else if (command == "boardsize"){
@@ -25,8 +26,23 @@ void GTP::ProcessLine(const std::string& line){
         board = Board(currentSize);
         SendResponse("");
     }
-    else if (line == "clear_board"){
-        Board board(9);
+    else if (command == "clear_board"){
+        board = Board(currentSize);
+        SendResponse("");
+    }
+    else if (command == "play"){
+        GTP::Play(ss);
+    }
+    else if (command == "genmove"){
+        GTP::GenMove(ss);
+    }
+    else if (command == "undo"){
+        SendError("cannot undo");
+    }
+    else if (command == "list_commands"){
+        GTP::ListCommands();
+    }
+    else if (command == "komi"){
         SendResponse("");
     }
     else {
@@ -34,29 +50,66 @@ void GTP::ProcessLine(const std::string& line){
     }
 }
 
-void GTP::ProcessPosition(const std::string& line){
-    std::stringstream ss(line);
-    std::string command;
+void GTP::Play(std::istringstream& ss){
     std::string colour;
     std::string pos;
-    ss >> command;
-    if (command == "play"){
-        if(pos=="pass"){
-            return;
-        }
-        ss >> colour >> pos;
-        Stone stone_colour;
-        if(colour=="b" || colour == "B"){
-            stone_colour = Stone::BLACK;
-        }
-        else {
-            stone_colour = Stone::WHITE;
-        }
-        int x = std::toupper(pos[0]) - 'A';
-        if (std::toupper(pos[0]) > 'I') x--;
-        int y = currentSize - std::stoi(pos.substr(1));
-        int index = board.CoordinateToIndex(x,y);
-        board.PlayStone(index, stone_colour);
+    ss >> colour >> pos;
+    Stone stone_colour = (colour=="b" || colour == "B")?Stone::BLACK:Stone::WHITE;
+
+    if(pos=="pass"){
+        board.Pass(stone_colour);
         SendResponse("");
+        return;
     }
+
+    int x = std::toupper(pos[0]) - 'A';
+    if (std::toupper(pos[0]) > 'I') x--;
+    int y = currentSize - std::stoi(pos.substr(1));
+    int index = board.CoordinateToIndex(x,y);
+    board.PlayStone(index, stone_colour);
+    SendResponse("");
+}
+
+void GTP::GenMove(std::istringstream& ss) {
+    std::string colour;
+    std::vector<int> legalMoves;
+    ss >> colour;
+    Stone stone_colour = (colour == "b" || colour == "B") ? Stone::BLACK : Stone::WHITE;
+
+    for (int i = 0; i < currentSize * currentSize; i++) {
+        if (board.ValidMove(i, stone_colour)) {
+            legalMoves.push_back(i);
+        }
+    }
+    if (legalMoves.empty()) {
+        board.Pass(stone_colour);
+        SendResponse("pass");
+        return;
+    }
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dist(0, legalMoves.size() - 1);
+    
+    int chosen_index = legalMoves[dist(gen)];
+    board.PlayStone(chosen_index, stone_colour);
+    int x = chosen_index % currentSize;
+    int y = chosen_index / currentSize;
+    
+    char x_char = 'A' + x;
+    if (x_char >= 'I') {
+        x_char++; // skip I
+    }
+    int sabaki_y = currentSize - y;
+    std::string sabaki_coord = std::string(1, x_char) + std::to_string(sabaki_y);
+    SendResponse(sabaki_coord);
+}
+
+void GTP::ListCommands(){
+    std::vector<std::string> commands = {"name", "version","protocol_version","play","boardsize","clear_board","genmode","quit"};
+    std::cout << "= ";
+    for(std::string command : commands){
+        std::cout << command << "\n";
+    }
+    std::cout << "\n";
 }
