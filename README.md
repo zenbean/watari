@@ -62,14 +62,18 @@ In Go, that will be 2 colours $\times$ 81 board positions (for a 9x9 board).
 By doing this, any board configuration can be represented by a random bitstring that is generated when the program is initalised.
 By using zobrist hashing, repeated board states can be found more quickly and AI engine implementation will be more lightweight
 The mechanism of zobrist hashing ultimately relies on bitwise XOR operation, by exploiting the characteristic:
-$$ A \oplus B \oplus C = A \text{ \\  \\ \\ \\ if C = B}$$
+
+$$
+A \oplus B \oplus C = A \text{ \\  \\ \\ \\ if C = B}
+$$
+
 Where A, B and C are random bitstrings that were generated when initialising the zobrist hash table. The current board state is represented by the running total of the XOR operations, and only this value needs to be stored and kept track of to detect repeated board states.
 
-By representing the initial empty board state with an empty hash of 0. We can track the board state thorugh a sequence of moves:<br>
-1. $$ 0 \oplus A = A$$
-2. $$ A \oplus B = U$$
-3. $$ U \oplus C \oplus B = V$$
-4. $$ V\oplus B \oplus C = U$$
+By representing the initial empty board state with an empty hash of 0. We can track the board state thorugh a sequence of moves:
+1. $0 \oplus A = A$
+2. $A \oplus B = U$
+3. $U \oplus C \oplus B = V$
+4. $V\oplus B \oplus C = U$
 #### Explanation:
 1. **First player:** places black stone at index M. Value in LUT corresponds to A
 2. **Second player:** places white stone at index N. Value in LUT corresponds to B. The resulting board state is U
