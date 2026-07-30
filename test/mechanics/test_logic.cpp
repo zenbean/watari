@@ -5,7 +5,7 @@
 TEST(EngineStressTest, ParseAndPlayT01) {
     int boardSize = 19;
     Board board(boardSize);
-    std::vector<SGF> moves = ParseSGF("../test_data/T01.sgf", boardSize);
+    std::vector<SGF> moves = ParseSGF("../test/test_data/T01.sgf", boardSize);
     
     ASSERT_EQ(moves.size(), 146) << "Parser failed to extract all SGF";
 
