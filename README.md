@@ -43,7 +43,9 @@ Black and White take turns putting down stones, in each turn the player can choo
 
 This game engine enforces situational superko, where a repetition of past board states with the same player to play is deemed an illegal move.
 
-The game continues until no more legal moves are possible.
+The game ends when there are two successive passes are played. 
+
+A player’s score is the number of points of their color, plus the number of empty points that reach only their colour. The player with the higher score at the end of the game is the winner. Equal scores result in a tie. (From [Tromp-Taylor rules](https://tromp.github.io/go.html))
 
 ## features
 ### 1D array board
