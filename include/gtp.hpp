@@ -9,7 +9,7 @@ class GTP{
         void SendResponse(const std::string& response);   
         void SendError(const std::string& error);
         void Play(std::istringstream& ss);
-        void GenMove(std::istringstream& ss);
+        void GenMove(std::istringstream& ss, const double& komi);
         void ListCommands();
     public:
         GTP();

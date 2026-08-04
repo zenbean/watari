@@ -1,4 +1,5 @@
 #include "gtp.hpp"
+#include "mcts.hpp"
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -17,6 +18,7 @@ void GTP::SendError(const std::string& error){
 void GTP::ProcessLine(const std::string& line){
     std::istringstream ss(line);
     std::string command;
+    double komi;
     ss>>command;
     if (command == "protocol_version") SendResponse("2");
     else if (command == "name") SendResponse("Watari");
@@ -34,7 +36,7 @@ void GTP::ProcessLine(const std::string& line){
         GTP::Play(ss);
     }
     else if (command == "genmove"){
-        GTP::GenMove(ss);
+        GTP::GenMove(ss, komi);
     }
     else if (command == "undo"){
         SendError("cannot undo");
@@ -44,6 +46,7 @@ void GTP::ProcessLine(const std::string& line){
     }
     else if (command == "komi"){
         SendResponse("");
+        ss >> komi;
     }
     else {
         SendError("unknown command");
@@ -70,7 +73,14 @@ void GTP::Play(std::istringstream& ss){
     SendResponse("");
 }
 
-void GTP::GenMove(std::istringstream& ss) {
+int randomMove(std::vector<int> legalMoves){
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dist(0, legalMoves.size() - 1);
+    return legalMoves[dist(gen)];
+}
+
+void GTP::GenMove(std::istringstream& ss, const double& komi) {
     std::string colour;
     std::vector<int> legalMoves;
     ss >> colour;
@@ -81,18 +91,18 @@ void GTP::GenMove(std::istringstream& ss) {
             legalMoves.push_back(i);
         }
     }
+    legalMoves.push_back(-1);
     if (legalMoves.empty()) {
         board.Pass(stone_colour);
         SendResponse("pass");
         return;
     }
-
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> dist(0, legalMoves.size() - 1);
-    
-    int chosen_index = legalMoves[dist(gen)];
+    MCTS algo;
+    int chosen_index = algo.Search(-1, stone_colour, komi, board);
     board.PlayStone(chosen_index, stone_colour);
+    if (chosen_index == -1){
+        SendResponse("pass");
+    }
     int x = chosen_index % currentSize;
     int y = chosen_index / currentSize;
     
