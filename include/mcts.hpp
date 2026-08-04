@@ -21,12 +21,12 @@ class Node{
 
 class MCTS{
     private:
-        int search_iterations = 500;
-        std::optional<Stone> engineColour;
+        int search_iterations = 200;
         std::optional<Stone> opponentColour;
         double Simulate(Node* &node, const double& komi, Board board);
         std::vector<int> GenerateLegalMoves(std::optional<Stone> currentColour, Board& board);
+        public:
         double AreaScoring(const double& komi, Board& board);
-    public:
+        std::optional<Stone> engineColour;
         int Search(int move, std::optional<Stone> colour, const double& komi, Board& board);
 };
