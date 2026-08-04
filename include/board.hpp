@@ -35,4 +35,5 @@ class Board{
         int GetLibertiesCount(int x) { return groupLiberties[Find(x)].size(); }
         std::optional<Stone> GetStone(int x) { return board[x]; }
         uint64_t GetCurrentHash(){return currentHash;}
+        int GetBoardSize() {return boardSize;}
 };
