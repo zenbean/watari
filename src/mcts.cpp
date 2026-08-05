@@ -2,6 +2,7 @@
 #include <cmath>
 #include <random>
 #include <queue>
+#include <thread>
 
 Node::Node(Node* parentNode, int move, std::optional<Stone> colour, Board& board){
     parent = parentNode;
@@ -15,11 +16,10 @@ Node::Node(Node* parentNode, int move, std::optional<Stone> colour, Board& board
     legalMoves.push_back(-1);
 }
 
-int MCTS::Search(int move, std::optional<Stone> colour, const double& komi, Board& board){
-    engineColour = colour;
-    opponentColour = (colour == Stone::BLACK)?Stone::WHITE:Stone::BLACK;
-    Node root(nullptr, move, opponentColour, board); // root node
-    for (int i=0; i<search_iterations; i++){
+void MCTS::SearchThread(int iterations, const double& komi, Board& board, std::array<std::atomic<int>, NUMBER_OF_MOVES>& global_visits){
+    std::optional<Stone> opponentColour = (engineColour == Stone::BLACK)?Stone::WHITE:Stone::BLACK;
+    Node root(nullptr, -1, opponentColour, board); // root node
+    for (int i=0; i<iterations; i++){
         Node* current = &root;
         Board tempBoard = board;
         int turn = 0;
@@ -30,12 +30,12 @@ int MCTS::Search(int move, std::optional<Stone> colour, const double& komi, Boar
             std::vector<double> uct_values;
             double maxVal = -1;
             int childIndex;
+            double C = sqrt(2);
+            double log_Ns=log(current->visited);
             for (auto& child:current->children){
                 double Q_sa = (child->reward / child->visited);
-                double C = sqrt(2);
-                double N_s=current->visited;
                 double N_sa=child->visited;
-                double uct = Q_sa + ( C * sqrt( log( N_s ) / N_sa ) );
+                double uct = Q_sa + ( C * sqrt( log_Ns / N_sa ) );
                 uct_values.push_back(uct);
             }
             // find the node with maximum uct value
@@ -73,13 +73,37 @@ int MCTS::Search(int move, std::optional<Stone> colour, const double& komi, Boar
             current = current->parent;
         }
     }
+    for(const auto& child:root.children){
+        int index=child->moveIndex;
+        if(index==-1){
+            index = 81;
+        }
+        global_visits[index].fetch_add(child->visited, std::memory_order_relaxed);
+    }
+}
+
+int MCTS::ParallelSearch(int move, double komi, Board& board){
+    std::array<std::atomic<int>, NUMBER_OF_MOVES> global_visits;
+    int threadIterations = searchIterations/numThreads;
+    std::vector<std::thread> searchWorkers;
+    for(auto& counter:global_visits){
+        counter.store(0, std::memory_order_relaxed);
+    }
+    for (int i = 0; i < numThreads; i++){
+        searchWorkers.emplace_back(&MCTS::SearchThread, this, threadIterations, komi, std::ref(board), std::ref(global_visits));
+    }
+    for (auto& worker:searchWorkers){
+        worker.join();
+    }
+
     // final action
     int bestMove = -1;
     int mostVisited = -1;
-    for(auto& child:root.children){
-        if (child->visited>mostVisited){
-            bestMove=child->moveIndex;
-            mostVisited=child->visited;
+    for(int i = 0; i < NUMBER_OF_MOVES; i++){
+        int totalVisits = global_visits[i].load(std::memory_order_relaxed);
+        if (totalVisits>mostVisited){
+            bestMove=(i==81)?-1:i;
+            mostVisited=totalVisits;
         }
     }
     return bestMove;
@@ -87,7 +111,8 @@ int MCTS::Search(int move, std::optional<Stone> colour, const double& komi, Boar
 
 // simulate on a temporary board
 double MCTS::Simulate(Node* &node, const double& komi, Board board){
-    std::mt19937_64 gen(2565398);
+    static std::atomic<uint64_t> thread_seed{2565398};
+    static thread_local std::mt19937_64 gen(thread_seed.fetch_add(1, std::memory_order_relaxed));
     int consecutivePasses = 0;
     std::optional<Stone> currentColour = node->nextColour;
 

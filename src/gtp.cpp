@@ -22,7 +22,7 @@ void GTP::ProcessLine(const std::string& line){
     ss>>command;
     if (command == "protocol_version") SendResponse("2");
     else if (command == "name") SendResponse("Watari");
-    else if (command == "version") SendResponse("0.1");
+    else if (command == "version") SendResponse("0.3");
     else if (command == "boardsize"){
         ss >> currentSize;
         board = Board(currentSize);
@@ -97,8 +97,8 @@ void GTP::GenMove(std::istringstream& ss, const double& komi) {
         SendResponse("pass");
         return;
     }
-    MCTS algo;
-    int chosen_index = algo.Search(-1, stone_colour, komi, board);
+    MCTS algo(stone_colour);
+    int chosen_index = algo.ParallelSearch(-1, komi, board);
     board.PlayStone(chosen_index, stone_colour);
     if (chosen_index == -1){
         SendResponse("pass");

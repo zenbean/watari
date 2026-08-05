@@ -4,6 +4,12 @@
 #include <optional>
 #include "common.hpp"
 #include "board.hpp"
+#include <atomic>
+
+struct RootParallelism{
+    int moveIndex;
+    int visits;
+};
 
 class Node{
     friend class MCTS;
@@ -21,12 +27,15 @@ class Node{
 
 class MCTS{
     private:
-        int search_iterations = 200;
-        std::optional<Stone> opponentColour;
+        static constexpr int searchIterations = 800;
+        static constexpr int numThreads = 2;
+        static constexpr int NUMBER_OF_MOVES = 82;
+        const std::optional <Stone> engineColour;
         double Simulate(Node* &node, const double& komi, Board board);
         std::vector<int> GenerateLegalMoves(std::optional<Stone> currentColour, Board& board);
-        public:
         double AreaScoring(const double& komi, Board& board);
-        std::optional<Stone> engineColour;
-        int Search(int move, std::optional<Stone> colour, const double& komi, Board& board);
+        void SearchThread(int iterations, const double& komi, Board& board, std::array<std::atomic<int>, NUMBER_OF_MOVES>& global_visits);
+    public:
+        MCTS(std::optional<Stone> colour):engineColour{colour}{};
+        int ParallelSearch(int move, double komi, Board& board);
 };
