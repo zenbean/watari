@@ -18,7 +18,6 @@ void GTP::SendError(const std::string& error){
 void GTP::ProcessLine(const std::string& line){
     std::istringstream ss(line);
     std::string command;
-    double komi;
     ss>>command;
     if (command == "protocol_version") SendResponse("2");
     else if (command == "name") SendResponse("Watari");
@@ -102,6 +101,7 @@ void GTP::GenMove(std::istringstream& ss, const double& komi) {
     board.PlayStone(chosen_index, stone_colour);
     if (chosen_index == -1){
         SendResponse("pass");
+        return;
     }
     int x = chosen_index % currentSize;
     int y = chosen_index / currentSize;

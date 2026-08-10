@@ -29,7 +29,7 @@ void MCTS::SearchThread(int iterations, const double& komi, Board& board, std::a
             // calculate and store uct value of each child
             std::vector<double> uct_values;
             double maxVal = -1;
-            int childIndex;
+            int childIndex=0;
             double C = sqrt(2);
             double log_Ns=log(current->visited);
             for (auto& child:current->children){
@@ -73,10 +73,11 @@ void MCTS::SearchThread(int iterations, const double& komi, Board& board, std::a
             current = current->parent;
         }
     }
+    int passIndex = board.GetBoardSize() * board.GetBoardSize();
     for(const auto& child:root.children){
         int index=child->moveIndex;
         if(index==-1){
-            index = 81;
+            index = passIndex;
         }
         global_visits[index].fetch_add(child->visited, std::memory_order_relaxed);
     }
@@ -99,10 +100,11 @@ int MCTS::ParallelSearch(int move, double komi, Board& board){
     // final action
     int bestMove = -1;
     int mostVisited = -1;
-    for(int i = 0; i < NUMBER_OF_MOVES; i++){
+    int passIndex = board.GetBoardSize() * board.GetBoardSize();
+    for(int i = 0; i <= passIndex; i++){
         int totalVisits = global_visits[i].load(std::memory_order_relaxed);
         if (totalVisits>mostVisited){
-            bestMove=(i==81)?-1:i;
+            bestMove=(i==passIndex)?-1:i;
             mostVisited=totalVisits;
         }
     }

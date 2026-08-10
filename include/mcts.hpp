@@ -29,7 +29,7 @@ class MCTS{
     private:
         static constexpr int searchIterations = 800;
         static constexpr int numThreads = 2;
-        static constexpr int NUMBER_OF_MOVES = 82;
+        static constexpr int NUMBER_OF_MOVES = 362;
         const std::optional <Stone> engineColour;
         double Simulate(Node* &node, const double& komi, Board board);
         std::vector<int> GenerateLegalMoves(std::optional<Stone> currentColour, Board& board);
