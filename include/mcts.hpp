@@ -27,7 +27,7 @@ class Node{
 
 class MCTS{
     private:
-        static constexpr int searchIterations = 800;
+        static constexpr int searchIterations = 8000;
         static constexpr int numThreads = 2;
         static constexpr int NUMBER_OF_MOVES = 362;
         const std::optional <Stone> engineColour;

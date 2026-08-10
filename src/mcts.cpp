@@ -58,13 +58,21 @@ void MCTS::SearchThread(int iterations, const double& komi, Board& board, std::a
 
         // expand
         if (!current->legalMoves.empty()){
-            current->children.push_back(std::make_unique<Node>(current, current->legalMoves.back(), engineColour, board));
+            int expandMove = current->legalMoves.back();
             current->legalMoves.pop_back();
+            std::optional<Stone> expandColour = current->nextColour;
+
+            if (expandMove == -1) {
+                tempBoard.Pass(expandColour);
+            } else {
+                tempBoard.PlayStone(expandMove, expandColour);
+            }
+            current->children.push_back(std::make_unique<Node>(current, expandMove, expandColour, tempBoard));
             current = current->children.back().get();
         }
 
         //simulate
-        double simReward = Simulate(current, komi, board);
+        double simReward = Simulate(current, komi, tempBoard);
 
         //backpropagate
         while(current!=nullptr){

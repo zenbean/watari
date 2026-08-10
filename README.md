@@ -1,7 +1,7 @@
 # watari
 Lightweight Go engine written in C++ that interfaces with the Sabaki UI
 
-**Current state:** When prompted by Sabaki, the engine generates and plays random legal moves. A simple game engine, can be easily beaten :)
+**Current state:** When prompted by Sabaki, the engine runs a multithreaded Monte Carlo Tree Search for the best next move. Currently is able to evaluate 8000 iterations in 5 seconds.
 
 ## setup
 Ubuntu 22.04
@@ -17,39 +17,16 @@ Compile the engine:
 ```bash
 ./compile.sh
 ```
+
 Install [Sabaki UI](https://github.com/SabakiHQ/Sabaki) and attach Watari as an engine
 
-Set path: wsl
+Set path: `wsl`
 
-Set argument: \<wsl path\>/watari/build/watari
-
-## definitions
-**Stones**:
-These are the black and white playing pieces
-
-**Group:**
-A chain of stones of the same colour
-
-**Liberties:**
-Number of liberties correspond to the number of unoccupied adjacent positions next to a group. Liberty of each stone in a group accumulates
-
-**Ko:**
-Ko is required to prevent infinite loops of board states, there are many variations of this rule to tackle this infinite loop issue. This game engine uses Situational SuperKo. Prohibits the repetition of a position or board state with the same player to play. Standard used by American and British Go Association, and in AlphaGo. Can be translated as 'consequence'
-
-## game rules
-Game of Go can have a board size of 9x9, 13x13 or 19x19. Smaller board sizes are more suitable for beginners. 
-
-Black and White take turns putting down stones, in each turn the player can choose to place down one stone or pass their turn. Stones are to be placed at the intersection points of the board.
-
-This game engine enforces situational superko, where a repetition of past board states with the same player to play is deemed an illegal move.
-
-The game ends when there are two successive passes are played. 
-
-A player’s score is the number of points of their color, plus the number of empty points that reach only their colour. The player with the higher score at the end of the game is the winner. Equal scores result in a tie. (From [Tromp-Taylor rules](https://tromp.github.io/go.html))
+Set argument: `\<wsl path\>/watari/build/watari`
 
 ## features
-### 1D array board
-Go board is represented by a 2D board, this has been compressed to a 1D array board for easier manipulation and to reduce memory required to store the entire board
+### Monte Carlo Tree Search
+This game engine uses a multithreaded MCTS algorithm with root parallelisation, where each thread builds an independent search tree from the same initial root state. This approach avoids the heavy overhead of memory sharing and synchronisation locks across threads. An added advantage of this parallelism is wider trajectory diversity; exploring different independent paths increases the probability of finding a strong final action. Moving from single threaded to dual threaded architecture resulted in a significant ~40x computational speedup, achieving 8000 iterations in 5 seconds
 
 ### Disjoint Set Union
 Initially designed using DFS graph traversals but it quickly became clear it would not be a sustainable approach if this was to be scaled up for a larger board size. To search the entire board for every single move is highly inefficient and will become a bottleneck later in the project when it is scaled to an AI engine rather than just a Go game engine.
@@ -88,3 +65,24 @@ For further optimisation, zobrist hashing is implemented using lazy initialisati
 
 ### Sabaki UI
 This Go game engine can be plugged into Sabaki UI, a ready made electron based UI. It requires the game engine to be able to parse GTP input and outputs. GTP is a common used standard used in game engines, whereas SGF is common used standard of recording moves in Go. Both format parsing are implemented in Watari.
+
+## definitions
+**Stones**:
+These are the black and white playing pieces
+
+**Group:**
+A chain of stones of the same colour
+
+**Liberties:**
+Number of liberties correspond to the number of unoccupied adjacent positions next to a group. Liberty of each stone in a group accumulates
+
+**Ko:**
+Ko is required to prevent infinite loops of board states, there are many variations of this rule to tackle this infinite loop issue. This game engine uses Situational SuperKo. Prohibits the repetition of a position or board state with the same player to play. This is the standard used by American and British Go Association, and in AlphaGo. Can be translated as 'consequence'
+
+## game rules
+Go is played on grid boards (typically 9x9, 13x13, or 19x19). Black and White take turns placing stones at the intersection points of the grid, or passing their turn. The game ends when two successive passes are played.
+
+This game engine enforces situational superko, where a repetition of past board states with the same player to play is deemed an illegal move.
+
+A player’s score is the number of points of their colour, plus the number of empty points that reach only their colour. The player with the higher score at the end of the game is the winner. Equal scores result in a tie. (From [Tromp-Taylor rules](https://tromp.github.io/go.html))
+

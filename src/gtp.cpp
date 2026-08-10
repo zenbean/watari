@@ -5,7 +5,7 @@
 #include <string>
 #include <random>
 
-GTP::GTP():board(9), currentSize(9){}
+GTP::GTP():board(9), currentSize(9), komi(6.5){}
 
 void GTP::SendResponse(const std::string& response){
     std::cout << "= " << response << "\n\n";
@@ -35,7 +35,7 @@ void GTP::ProcessLine(const std::string& line){
         GTP::Play(ss);
     }
     else if (command == "genmove"){
-        GTP::GenMove(ss, komi);
+        GTP::GenMove(ss);
     }
     else if (command == "undo"){
         SendError("cannot undo");
@@ -79,7 +79,7 @@ int randomMove(std::vector<int> legalMoves){
     return legalMoves[dist(gen)];
 }
 
-void GTP::GenMove(std::istringstream& ss, const double& komi) {
+void GTP::GenMove(std::istringstream& ss) {
     std::string colour;
     std::vector<int> legalMoves;
     ss >> colour;
