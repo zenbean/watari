@@ -20,8 +20,8 @@ module control(
 typedef enum logic [6:0] { 
     INITIAL = 7'b0000001, 
     GEN_MOVE = 7'b0000010, 
-    PLAY_STONE = 7'b0000100,
-    VALIDATE = 7'b0001000,
+    VALIDATE = 7'b0000100,
+    PLAY_STONE = 7'b0001000,
     CAP_CHECK = 7'b0010000, 
     SWAP_TURN = 7'b0100000,
     SCORING = 7'b1000000 
